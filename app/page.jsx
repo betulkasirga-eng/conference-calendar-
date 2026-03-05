@@ -67,8 +67,8 @@ async function sbDelete(table, id) {
 // field mapping helpers
 const confToDB = (c) => ({id:1, name:c.name, subtitle:c.subtitle, location:c.location, start_date:c.startDate, end_date:c.endDate});
 const confFromDB = (r) => ({name:r.name, subtitle:r.subtitle, location:r.location, startDate:r.start_date, endDate:r.end_date});
-const sessionToDB = (s) => ({id:s.id, title:s.title, type:s.type, day:s.day, time:s.time, end_time:s.endTime||"", room:s.room||"", building:s.building||"", floor:s.floor||"", description:s.description||"", co_presenters:s.coPresenters||"", presenter_ids:s.presenterIds||[]});
-const sessionFromDB = (r) => ({...r, endTime:r.end_time, coPresenters:r.co_presenters||"", presenterIds:r.presenter_ids||[]});
+const sessionToDB = (s) => ({id:s.id, title:s.title, type:s.type, day:s.day, time:s.time, end_time:s.endTime||"", room:s.room||"", building:s.building||"", floor:s.floor||"", description:s.description||"", co_presenters:s.coPresenters||"", official_link:s.officialLink||"", presenter_ids:s.presenterIds||[]});
+const sessionFromDB = (r) => ({...r, endTime:r.end_time, coPresenters:r.co_presenters||"", officialLink:r.official_link||"", presenterIds:r.presenter_ids||[]});
 const attendeeToDB = (a) => ({id:a.id, name:a.name, affiliation:a.affiliation||"", role:a.role||"", email:a.email||"", phone:a.phone||"", website:a.website||"", days:a.days||[], notes:a.notes||""});
 const attendeeFromDB = (r) => ({...r});
 
@@ -155,6 +155,14 @@ function SessionDetail({session,attendees,onClose,onEdit,isAdmin}){
               <div style={{...secT,marginBottom:3}}>🏛️ Building</div>
               <div style={{fontSize:13,fontWeight:600,color:"#1a1a2e"}}>{session.building}{session.floor&&<span style={{fontSize:11,color:"#6B6057",marginLeft:6}}>· {session.floor}</span>}</div>
             </div>
+          )}
+          {session.officialLink&&(
+            <a href={session.officialLink} target="_blank" rel="noopener noreferrer"
+              style={{display:"flex",alignItems:"center",gap:8,background:UA.blue+"10",border:`1px solid ${UA.blue}30`,borderRadius:8,padding:"10px 14px",textDecoration:"none",color:UA.blue,fontSize:12,fontWeight:700,cursor:"pointer"}}
+              onClick={e=>e.stopPropagation()}
+            >
+              🔗 View Official AERA Page
+            </a>
           )}
           {session.description&&(
             <div>
@@ -279,7 +287,7 @@ function AttendeeView({attendee,sessions,onClose,onEdit,isAdmin}){
 // ── Session form (add/edit) ────────────────────────────────────────────────────
 function SessionForm({session,confDays,attendees,onClose,onSave,onDelete}){
   const isNew=!session?.id;
-  const [f,setF]=useState(session?{...session}:{title:"",type:"Paper Presentation",day:"",time:"",endTime:"",room:"",building:"",floor:"",description:"",coPresenters:"",presenterIds:[]});
+  const [f,setF]=useState(session?{...session}:{title:"",type:"Paper Presentation",day:"",time:"",endTime:"",room:"",building:"",floor:"",description:"",coPresenters:"",officialLink:"",presenterIds:[]});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
   const toggleP=(id)=>set("presenterIds",f.presenterIds.includes(id)?f.presenterIds.filter(x=>x!==id):[...f.presenterIds,id]);
   const handleSave=()=>{if(!f.title)return;onSave({...f,id:f.id||"S"+Date.now()});onClose();};
@@ -312,6 +320,10 @@ function SessionForm({session,confDays,attendees,onClose,onSave,onDelete}){
           </div>
           <div><span style={lbl}>Floor / Level</span><input style={inp} value={f.floor} onChange={e=>set("floor",e.target.value)} placeholder="e.g. Level 2"/></div>
           <div><span style={lbl}>Description</span><textarea style={{...inp,resize:"vertical",minHeight:70}} value={f.description} onChange={e=>set("description",e.target.value)} placeholder="What is this session about?"/></div>
+          <div>
+            <span style={lbl}>Official AERA Link</span>
+            <input style={inp} value={f.officialLink||""} onChange={e=>set("officialLink",e.target.value)} placeholder="https://aera.net/..."/>
+          </div>
           <div>
             <span style={lbl}>Co-Presenters (outside group)</span>
             <input style={inp} value={f.coPresenters||""} onChange={e=>set("coPresenters",e.target.value)} placeholder="e.g. John Smith (Harvard), Jane Doe (UCLA)"/>
