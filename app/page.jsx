@@ -1,6 +1,10 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 
+// ── ADMIN PASSWORD — bunu değiştir ──────────────────────────────────────────
+const ADMIN_PASSWORD = "aera2026";
+// ────────────────────────────────────────────────────────────────────────────
+
 const COLORS = ["#C17D3C","#5B8A72","#7B5EA7","#3A7CA5","#C45C5C","#4A8F6F","#8B6914","#5C7AB5","#A05C8A","#4A7A8A"];
 const getColor = (id) => COLORS[(id - 1) % COLORS.length];
 const initials = (name) => (name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
@@ -20,7 +24,6 @@ function getDaysBetween(start,end) {
 }
 
 const DEFAULT_CONF = { name:"AERA 2026", subtitle:"American Educational Research Association Annual Meeting", location:"Philadelphia, PA", startDate:"2026-04-08", endDate:"2026-04-12" };
-
 const DEFAULT_ATTENDEES = [
   { id:1, name:"Betul Yilmaz", affiliation:"University of Arizona", role:"Doctoral Student", email:"betul@arizona.edu", phone:"", website:"", days:["2026-04-08","2026-04-09","2026-04-10"],
     sessions:[
@@ -45,6 +48,53 @@ const lbl = { fontSize:11,fontWeight:700,letterSpacing:1.5,color:"#9B8E7A",textT
 const secTitle = { fontSize:11,fontWeight:700,letterSpacing:2,color:"#9B8E7A",textTransform:"uppercase",marginBottom:8 };
 const SESSION_TYPES = ["Keynote","Paper Presentation","Panel","Workshop","Roundtable","Symposium","Poster","Social","Other"];
 
+function loadFromStorage(key, fallback) {
+  try { const r=localStorage.getItem(key); return r?JSON.parse(r):fallback; } catch { return fallback; }
+}
+function saveToStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+// ── Admin login modal ─────────────────────────────────────────────────────────
+function AdminLoginModal({ onClose, onSuccess }) {
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState(false);
+  const attempt = () => {
+    if (pw === ADMIN_PASSWORD) { onSuccess(); onClose(); }
+    else { setErr(true); setPw(""); setTimeout(()=>setErr(false),2000); }
+  };
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,12,8,0.82)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,padding:20,backdropFilter:"blur(4px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#FDFAF5",borderRadius:16,maxWidth:360,width:"100%",overflow:"hidden",boxShadow:"0 32px 80px rgba(0,0,0,0.35)",animation:"slideUp 0.22s ease"}}>
+        <div style={{background:"#2C2416",padding:"24px 28px",textAlign:"center"}}>
+          <div style={{fontSize:28,marginBottom:8}}>🔒</div>
+          <div style={{fontSize:17,fontWeight:700,fontFamily:"'Playfair Display',serif",color:"#F8F3EB"}}>Admin Access</div>
+          <div style={{fontSize:12,color:"#6B5F4F",marginTop:4}}>Enter password to edit</div>
+        </div>
+        <div style={{padding:"24px 28px",display:"flex",flexDirection:"column",gap:14}}>
+          <div>
+            <span style={lbl}>Password</span>
+            <input
+              style={{...inp, border: err?"1.5px solid #C45C5C":"1.5px solid #E8E0D0", transition:"border 0.2s"}}
+              type="password" value={pw}
+              onChange={e=>{setPw(e.target.value);setErr(false);}}
+              onKeyDown={e=>e.key==="Enter"&&attempt()}
+              placeholder="Enter admin password"
+              autoFocus
+            />
+            {err && <div style={{fontSize:12,color:"#C45C5C",marginTop:5}}>Incorrect password, try again.</div>}
+          </div>
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+            <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1.5px solid #E8E0D0",background:"none",color:"#9B8E7A",fontSize:13,cursor:"pointer"}}>Cancel</button>
+            <button onClick={attempt} style={{padding:"9px 20px",borderRadius:8,border:"none",background:"#2C2416",color:"#F8F3EB",fontSize:13,fontWeight:700,cursor:"pointer"}}>Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Session detail popup ──────────────────────────────────────────────────────
 function SessionDetail({ session, attendee, onClose }) {
   if (!session||!attendee) return null;
   const color = getColor(attendee.id);
@@ -53,7 +103,7 @@ function SessionDetail({ session, attendee, onClose }) {
       <div onClick={e=>e.stopPropagation()} style={{background:"#FDFAF5",borderRadius:16,maxWidth:490,width:"100%",overflow:"hidden",boxShadow:"0 32px 80px rgba(0,0,0,0.4)",animation:"slideUp 0.22s ease"}}>
         <div style={{background:`linear-gradient(135deg,${color},${color}bb)`,padding:"24px 28px",position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:14,right:14,background:"rgba(255,255,255,0.25)",border:"none",color:"#fff",width:30,height:30,borderRadius:"50%",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
-          {session.type && <span style={{background:"rgba(255,255,255,0.22)",color:"#fff",padding:"3px 10px",borderRadius:12,fontSize:11,fontWeight:700}}>{session.type}</span>}
+          {session.type&&<span style={{background:"rgba(255,255,255,0.22)",color:"#fff",padding:"3px 10px",borderRadius:12,fontSize:11,fontWeight:700}}>{session.type}</span>}
           <div style={{fontSize:20,fontWeight:700,fontFamily:"'Playfair Display',serif",color:"#fff",marginTop:10,lineHeight:1.3}}>{session.title}</div>
           <div style={{fontSize:12,color:"rgba(255,255,255,0.75)",marginTop:5}}>{attendee.name} · {attendee.affiliation}</div>
         </div>
@@ -71,9 +121,9 @@ function SessionDetail({ session, attendee, onClose }) {
           <div style={{background:"#F5F0E8",borderRadius:10,padding:"12px 14px"}}>
             <div style={{...secTitle,marginBottom:4}}>📍 Location</div>
             <div style={{fontSize:15,fontWeight:700,color:"#2C2416"}}>{session.room||"TBD"}</div>
-            {(session.building||session.floor) && <div style={{fontSize:12,color:"#7A6E5A",marginTop:3}}>{[session.building,session.floor].filter(Boolean).join(" · ")}</div>}
+            {(session.building||session.floor)&&<div style={{fontSize:12,color:"#7A6E5A",marginTop:3}}>{[session.building,session.floor].filter(Boolean).join(" · ")}</div>}
           </div>
-          {session.description && (
+          {session.description&&(
             <div>
               <div style={secTitle}>Description</div>
               <div style={{fontSize:13,color:"#5A4E3A",lineHeight:1.7,background:"#F5F0E8",padding:"12px 14px",borderRadius:10}}>{session.description}</div>
@@ -92,7 +142,8 @@ function SessionDetail({ session, attendee, onClose }) {
   );
 }
 
-function AttendeeView({ attendee, onClose, onEdit }) {
+// ── Attendee view modal ───────────────────────────────────────────────────────
+function AttendeeView({ attendee, onClose, onEdit, isAdmin }) {
   const [sessDetail, setSessDetail] = useState(null);
   if (!attendee) return null;
   const color = getColor(attendee.id);
@@ -102,7 +153,7 @@ function AttendeeView({ attendee, onClose, onEdit }) {
         <div onClick={e=>e.stopPropagation()} style={{background:"#FDFAF5",borderRadius:16,maxWidth:530,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.3)",animation:"slideUp 0.25s ease"}}>
           <div style={{background:color,padding:"26px 30px",position:"relative"}}>
             <div style={{display:"flex",gap:8,position:"absolute",top:14,right:14}}>
-              <button onClick={()=>{onClose();onEdit(attendee);}} style={{background:"rgba(255,255,255,0.25)",border:"none",color:"#fff",padding:"5px 12px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✏️ Edit</button>
+              {isAdmin&&<button onClick={()=>{onClose();onEdit(attendee);}} style={{background:"rgba(255,255,255,0.25)",border:"none",color:"#fff",padding:"5px 12px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✏️ Edit</button>}
               <button onClick={onClose} style={{background:"rgba(255,255,255,0.25)",border:"none",color:"#fff",width:30,height:30,borderRadius:"50%",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✕</button>
             </div>
             <div style={{width:58,height:58,borderRadius:"50%",background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:700,color:"#fff",fontFamily:"'Playfair Display',serif",marginBottom:12}}>{initials(attendee.name)}</div>
@@ -157,6 +208,7 @@ function AttendeeView({ attendee, onClose, onEdit }) {
   );
 }
 
+// ── Session sub-form ──────────────────────────────────────────────────────────
 function SessionForm({ session, confDays, onSave, onBack }) {
   const [f,setF] = useState(session||{title:"",day:"",time:"",endTime:"",room:"",building:"",floor:"",description:"",type:"Paper Presentation"});
   const set = (k,v) => setF(p=>({...p,[k]:v}));
@@ -165,9 +217,7 @@ function SessionForm({ session, confDays, onSave, onBack }) {
       <div style={{fontSize:15,fontWeight:700,color:"#2C2416",marginBottom:4}}>{session?"Edit Session":"New Session"}</div>
       <div><span style={lbl}>Session Title *</span><input style={inp} value={f.title} onChange={e=>set("title",e.target.value)} placeholder="e.g. Paper Presentation: My Research"/></div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <div><span style={lbl}>Type</span>
-          <select style={inp} value={f.type} onChange={e=>set("type",e.target.value)}>{SESSION_TYPES.map(t=><option key={t}>{t}</option>)}</select>
-        </div>
+        <div><span style={lbl}>Type</span><select style={inp} value={f.type} onChange={e=>set("type",e.target.value)}>{SESSION_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
         <div><span style={lbl}>Day</span>
           <select style={inp} value={f.day} onChange={e=>set("day",e.target.value)}>
             <option value="">Select day</option>
@@ -183,10 +233,8 @@ function SessionForm({ session, confDays, onSave, onBack }) {
         <div><span style={lbl}>Room / Hall</span><input style={inp} value={f.room} onChange={e=>set("room",e.target.value)} placeholder="e.g. Room 204"/></div>
         <div><span style={lbl}>Building</span><input style={inp} value={f.building} onChange={e=>set("building",e.target.value)} placeholder="e.g. Convention Center"/></div>
       </div>
-      <div><span style={lbl}>Floor / Level</span><input style={inp} value={f.floor} onChange={e=>set("floor",e.target.value)} placeholder="e.g. Level 2 / 3rd Floor"/></div>
-      <div><span style={lbl}>Description / Details</span>
-        <textarea style={{...inp,resize:"vertical",minHeight:80}} value={f.description} onChange={e=>set("description",e.target.value)} placeholder="What is this session about?"/>
-      </div>
+      <div><span style={lbl}>Floor / Level</span><input style={inp} value={f.floor} onChange={e=>set("floor",e.target.value)} placeholder="e.g. Level 2"/></div>
+      <div><span style={lbl}>Description</span><textarea style={{...inp,resize:"vertical",minHeight:80}} value={f.description} onChange={e=>set("description",e.target.value)} placeholder="What is this session about?"/></div>
       <div style={{display:"flex",gap:10,justifyContent:"flex-end",paddingTop:4}}>
         <button onClick={onBack} style={{padding:"9px 20px",borderRadius:8,border:"1.5px solid #E8E0D0",background:"none",color:"#9B8E7A",fontSize:13,cursor:"pointer"}}>← Back</button>
         <button onClick={()=>onSave({...f,id:f.id||"s"+Date.now()})} style={{padding:"9px 20px",borderRadius:8,border:"none",background:"#2C2416",color:"#F8F3EB",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save Session</button>
@@ -195,23 +243,20 @@ function SessionForm({ session, confDays, onSave, onBack }) {
   );
 }
 
+// ── Attendee form (add/edit) ──────────────────────────────────────────────────
 function AttendeeForm({ attendee, confDays, onClose, onSave, onDelete }) {
   const isNew = !attendee?.id;
-  const blank = {name:"",affiliation:"",role:"",email:"",phone:"",website:"",days:[],sessions:[],notes:""};
-  const [form,setForm] = useState(attendee?{...attendee,sessions:attendee.sessions.map(s=>({...s}))}:blank);
+  const [form,setForm] = useState(attendee?{...attendee,sessions:attendee.sessions.map(s=>({...s}))}:{name:"",affiliation:"",role:"",email:"",phone:"",website:"",days:[],sessions:[],notes:""});
   const [editingSess,setEditingSess] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const toggleDay = (d) => set("days",form.days.includes(d)?form.days.filter(x=>x!==d):[...form.days,d]);
-
   const saveSession = (data) => {
     if(editingSess.idx==="new") set("sessions",[...form.sessions,data]);
     else { const arr=[...form.sessions]; arr[editingSess.idx]=data; set("sessions",arr); }
     setEditingSess(null);
   };
-
   const handleSave = () => { if(!form.name) return; onSave({...form,id:attendee?.id||Date.now(),avatar:initials(form.name)}); onClose(); };
   const handleDelete = () => { if(window.confirm(`Remove ${attendee.name}?`)){onDelete(attendee.id);onClose();} };
-
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,12,8,0.82)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,padding:20,backdropFilter:"blur(4px)"}}>
       <div onClick={e=>e.stopPropagation()} style={{background:"#FDFAF5",borderRadius:16,maxWidth:560,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.35)",animation:"slideUp 0.22s ease"}}>
@@ -219,15 +264,9 @@ function AttendeeForm({ attendee, confDays, onClose, onSave, onDelete }) {
           <div style={{fontSize:17,fontWeight:700,fontFamily:"'Playfair Display',serif",color:"#2C2416"}}>{isNew?"Add Attendee":`Edit: ${attendee.name}`}</div>
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#9B8E7A"}}>✕</button>
         </div>
-
-        {editingSess ? (
-          <SessionForm
-            session={editingSess.idx==="new"?null:form.sessions[editingSess.idx]}
-            confDays={confDays}
-            onSave={saveSession}
-            onBack={()=>setEditingSess(null)}
-          />
-        ) : (
+        {editingSess?(
+          <SessionForm session={editingSess.idx==="new"?null:form.sessions[editingSess.idx]} confDays={confDays} onSave={saveSession} onBack={()=>setEditingSess(null)}/>
+        ):(
           <div style={{padding:"20px 28px",display:"flex",flexDirection:"column",gap:13}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               <div><span style={lbl}>Full Name *</span><input style={inp} value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Jane Smith"/></div>
@@ -268,7 +307,7 @@ function AttendeeForm({ attendee, confDays, onClose, onSave, onDelete }) {
                 ))}
               </div>
             </div>
-            <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:60}} value={form.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes about this person..."/></div>
+            <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:60}} value={form.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes..."/></div>
             <div style={{display:"flex",gap:10,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D0"}}>
               {!isNew?<button onClick={handleDelete} style={{padding:"9px 16px",borderRadius:8,border:"1.5px solid #C45C5C",background:"none",color:"#C45C5C",fontSize:13,cursor:"pointer"}}>🗑️ Delete</button>:<div/>}
               <div style={{display:"flex",gap:10}}>
@@ -283,7 +322,8 @@ function AttendeeForm({ attendee, confDays, onClose, onSave, onDelete }) {
   );
 }
 
-function Settings({ conf, onClose, onSave }) {
+// ── Settings modal ────────────────────────────────────────────────────────────
+function SettingsModal({ conf, onClose, onSave }) {
   const [f,setF] = useState({...conf});
   const set = (k,v) => setF(p=>({...p,[k]:v}));
   return (
@@ -294,15 +334,12 @@ function Settings({ conf, onClose, onSave }) {
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#9B8E7A"}}>✕</button>
         </div>
         <div style={{padding:"22px 28px",display:"flex",flexDirection:"column",gap:13}}>
-          <div><span style={lbl}>Conference Name *</span><input style={inp} value={f.name} onChange={e=>set("name",e.target.value)} placeholder="e.g. AERA 2026"/></div>
-          <div><span style={lbl}>Subtitle / Full Name</span><input style={inp} value={f.subtitle} onChange={e=>set("subtitle",e.target.value)} placeholder="Full conference name"/></div>
-          <div><span style={lbl}>City / Location</span><input style={inp} value={f.location} onChange={e=>set("location",e.target.value)} placeholder="e.g. Philadelphia, PA"/></div>
+          <div><span style={lbl}>Conference Name *</span><input style={inp} value={f.name} onChange={e=>set("name",e.target.value)}/></div>
+          <div><span style={lbl}>Subtitle</span><input style={inp} value={f.subtitle} onChange={e=>set("subtitle",e.target.value)}/></div>
+          <div><span style={lbl}>City / Location</span><input style={inp} value={f.location} onChange={e=>set("location",e.target.value)}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div><span style={lbl}>Start Date *</span><input style={inp} type="date" value={f.startDate} onChange={e=>set("startDate",e.target.value)}/></div>
-            <div><span style={lbl}>End Date *</span><input style={inp} type="date" value={f.endDate} onChange={e=>set("endDate",e.target.value)}/></div>
-          </div>
-          <div style={{background:"#FFF8EC",border:"1px solid #F0D9A8",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#8B6914"}}>
-            💡 Changing dates will update the day tabs automatically.
+            <div><span style={lbl}>Start Date</span><input style={inp} type="date" value={f.startDate} onChange={e=>set("startDate",e.target.value)}/></div>
+            <div><span style={lbl}>End Date</span><input style={inp} type="date" value={f.endDate} onChange={e=>set("endDate",e.target.value)}/></div>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end",paddingTop:4}}>
             <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1.5px solid #E8E0D0",background:"none",color:"#9B8E7A",fontSize:13,cursor:"pointer"}}>Cancel</button>
@@ -314,20 +351,11 @@ function Settings({ conf, onClose, onSave }) {
   );
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
-function loadFromStorage(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch { return fallback; }
-}
-function saveToStorage(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-}
-
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [conf, setConf] = useState(DEFAULT_CONF);
   const [attendees, setAttendees] = useState(DEFAULT_ATTENDEES);
   const [selectedDay, setSelectedDay] = useState(DEFAULT_CONF.startDate);
@@ -339,7 +367,6 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Load from localStorage on first render
   useEffect(() => {
     const storedConf = loadFromStorage("conf_settings", DEFAULT_CONF);
     const storedAttendees = loadFromStorage("conf_attendees", DEFAULT_ATTENDEES);
@@ -349,28 +376,26 @@ export default function App() {
     setReady(true);
   }, []);
 
-  // Save whenever conf or attendees change (after initial load)
   useEffect(() => {
     if (!ready) return;
     saveToStorage("conf_settings", conf);
     saveToStorage("conf_attendees", attendees);
     setSaved(true);
-    const t = setTimeout(() => setSaved(false), 1800);
+    const t = setTimeout(()=>setSaved(false), 1800);
     return () => clearTimeout(t);
   }, [conf, attendees, ready]);
 
-  const confDays = useMemo(() => getDaysBetween(conf.startDate, conf.endDate), [conf.startDate, conf.endDate]);
-  useEffect(() => { if (confDays.length && !confDays.includes(selectedDay)) setSelectedDay(confDays[0]); }, [confDays]);
+  const confDays = useMemo(()=>getDaysBetween(conf.startDate,conf.endDate),[conf.startDate,conf.endDate]);
+  useEffect(()=>{ if(confDays.length&&!confDays.includes(selectedDay)) setSelectedDay(confDays[0]); },[confDays]);
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return attendees.filter(a => a.name.toLowerCase().includes(q) || (a.affiliation||"").toLowerCase().includes(q) || (a.role||"").toLowerCase().includes(q));
-  }, [attendees, search]);
+  const filtered = useMemo(()=>{
+    const q=search.toLowerCase();
+    return attendees.filter(a=>a.name.toLowerCase().includes(q)||(a.affiliation||"").toLowerCase().includes(q)||(a.role||"").toLowerCase().includes(q));
+  },[attendees,search]);
 
-  const dayPeople = useMemo(() => filtered.filter(a => a.days.includes(selectedDay)), [filtered, selectedDay]);
-
-  const saveAttendee = (data) => setAttendees(prev => prev.some(a => a.id === data.id) ? prev.map(a => a.id === data.id ? data : a) : [...prev, data]);
-  const deleteAttendee = (id) => setAttendees(prev => prev.filter(a => a.id !== id));
+  const dayPeople = useMemo(()=>filtered.filter(a=>a.days.includes(selectedDay)),[filtered,selectedDay]);
+  const saveAttendee = (data) => setAttendees(prev=>prev.some(a=>a.id===data.id)?prev.map(a=>a.id===data.id?data:a):[...prev,data]);
+  const deleteAttendee = (id) => setAttendees(prev=>prev.filter(a=>a.id!==id));
 
   if (!ready) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#F8F3EB",fontSize:14,color:"#9B8E7A"}}>Loading...</div>;
 
@@ -386,12 +411,7 @@ export default function App() {
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#D4C9B0;border-radius:3px}
       `}</style>
 
-      {/* Saved indicator */}
-      {saved && (
-        <div style={{position:"fixed",bottom:20,right:20,background:"#2C2416",color:"#F8F3EB",padding:"8px 16px",borderRadius:10,fontSize:12,fontWeight:600,zIndex:9999,animation:"savedPop 1.8s ease forwards"}}>
-          ✓ Saved
-        </div>
-      )}
+      {saved&&<div style={{position:"fixed",bottom:20,right:20,background:"#2C2416",color:"#F8F3EB",padding:"8px 16px",borderRadius:10,fontSize:12,fontWeight:600,zIndex:9999,animation:"savedPop 1.8s ease forwards"}}>✓ Saved</div>}
 
       {/* Header */}
       <div style={{background:"#2C2416"}}>
@@ -403,14 +423,21 @@ export default function App() {
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             <div style={{fontSize:12,color:"#6B5F4F",background:"#3A3020",padding:"4px 12px",borderRadius:8}}>{attendees.length} attendees</div>
-            <button onClick={()=>setShowSettings(true)} style={{background:"#3A3020",color:"#C0B49A",border:"none",padding:"8px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontWeight:600}}>⚙️ Settings</button>
-            <button onClick={()=>setShowAdd(true)} style={{background:"#C17D3C",color:"#fff",border:"none",padding:"8px 18px",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Add Person</button>
+            {isAdmin ? (
+              <>
+                <span style={{fontSize:11,color:"#5B8A72",background:"#1e2e24",padding:"4px 10px",borderRadius:8,fontWeight:600}}>🔓 Admin</span>
+                <button onClick={()=>setShowSettings(true)} style={{background:"#3A3020",color:"#C0B49A",border:"none",padding:"8px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontWeight:600}}>⚙️ Settings</button>
+                <button onClick={()=>setShowAdd(true)} style={{background:"#C17D3C",color:"#fff",border:"none",padding:"8px 18px",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Add Person</button>
+                <button onClick={()=>setIsAdmin(false)} style={{background:"none",color:"#6B5F4F",border:"1px solid #3A3020",padding:"8px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>Log out</button>
+              </>
+            ) : (
+              <button onClick={()=>setShowLogin(true)} style={{background:"#3A3020",color:"#C0B49A",border:"none",padding:"8px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontWeight:600}}>🔒 Admin</button>
+            )}
           </div>
         </div>
       </div>
 
       <div style={{maxWidth:920,margin:"0 auto",padding:"20px 16px"}}>
-        {/* Search + toggle */}
         <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
           <div style={{flex:1,minWidth:180,position:"relative"}}>
             <span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14,color:"#C0B49A"}}>🔍</span>
@@ -438,12 +465,10 @@ export default function App() {
                 );
               })}
             </div>
-
             <div style={{marginBottom:14}}>
               <div style={{fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:700}}>{formatDateLong(selectedDay)}</div>
               <div style={{fontSize:12,color:"#9B8E7A",marginTop:2}}>{dayPeople.length} {dayPeople.length===1?"person":"people"} attending{search&&` · filtered by "${search}"`}</div>
             </div>
-
             {dayPeople.length===0?(
               <div style={{textAlign:"center",padding:"60px 0",color:"#C0B49A"}}>
                 <div style={{fontSize:38,marginBottom:10}}>🎪</div>
@@ -467,7 +492,7 @@ export default function App() {
                             <div style={{fontSize:11,color:"#9B8E7A"}}>{a.role}</div>
                           </div>
                         </div>
-                        <button onClick={e=>{e.stopPropagation();setEditModal(a);}} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>
+                        {isAdmin&&<button onClick={e=>{e.stopPropagation();setEditModal(a);}} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
                       </div>
                       {a.affiliation&&<div style={{fontSize:12,color:"#7A6E5A",marginBottom:7}}>{a.affiliation}</div>}
                       {daySess.length>0&&(
@@ -504,7 +529,7 @@ export default function App() {
                   <div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"flex-end"}}>
                     {a.days.map(d=><span key={d} style={{fontSize:11,background:"#F5F0E8",color:"#7A6E5A",padding:"2px 8px",borderRadius:10,fontWeight:500}}>{formatDateShort(d)}</span>)}
                   </div>
-                  <button onClick={e=>{e.stopPropagation();setEditModal(a);}} style={{background:"none",border:"none",fontSize:14,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>
+                  {isAdmin&&<button onClick={e=>{e.stopPropagation();setEditModal(a);}} style={{background:"none",border:"none",fontSize:14,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
                 </div>
               );
             })}
@@ -512,9 +537,10 @@ export default function App() {
         )}
       </div>
 
-      {viewModal&&<AttendeeView attendee={viewModal} onClose={()=>setViewModal(null)} onEdit={a=>{setViewModal(null);setEditModal(a);}}/>}
-      {(editModal||showAdd)&&<AttendeeForm attendee={editModal||null} confDays={confDays} onClose={()=>{setEditModal(null);setShowAdd(false);}} onSave={saveAttendee} onDelete={deleteAttendee}/>}
-      {showSettings&&<Settings conf={conf} onClose={()=>setShowSettings(false)} onSave={c=>setConf(c)}/>}
+      {showLogin&&<AdminLoginModal onClose={()=>setShowLogin(false)} onSuccess={()=>setIsAdmin(true)}/>}
+      {viewModal&&<AttendeeView attendee={viewModal} onClose={()=>setViewModal(null)} onEdit={a=>{setViewModal(null);setEditModal(a);}} isAdmin={isAdmin}/>}
+      {isAdmin&&(editModal||showAdd)&&<AttendeeForm attendee={editModal||null} confDays={confDays} onClose={()=>{setEditModal(null);setShowAdd(false);}} onSave={saveAttendee} onDelete={deleteAttendee}/>}
+      {isAdmin&&showSettings&&<SettingsModal conf={conf} onClose={()=>setShowSettings(false)} onSave={c=>setConf(c)}/>}
     </div>
   );
 }
