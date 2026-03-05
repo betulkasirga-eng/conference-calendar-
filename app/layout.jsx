@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Conference Calendar',
+  title: '2026 EPSP AERA CALENDAR',
   description: 'Conference attendee tracker',
 }
 
