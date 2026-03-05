@@ -498,18 +498,20 @@ export default function App(){
           <div style={{maxWidth:960,margin:"0 auto",padding:"14px 20px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                {/* Block A + Wordmark stacked */}
                 <img
-                  src="https://cdn.digital.arizona.edu/logos/v1.0.0/ua_block_rgb.min.svg"
+                  src="https://phoenixmed.arizona.edu/sites/default/files/campus/marcomm/brand/master-logo/3-block-a-arizona/ua_block_rgb_3.png"
                   alt="UA Block A"
                   style={{height:44,flexShrink:0}}
                   onError={e=>{e.target.style.display="none";}}
                 />
-                <div style={{width:1,height:36,background:"rgba(255,255,255,0.18)"}}/>
+                <div style={{width:1,height:40,background:"rgba(255,255,255,0.18)"}}/>
                 <div>
+                  <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.55)",letterSpacing:0.3,lineHeight:1.3}}>Department of Educational Policy</div>
+                  <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.55)",letterSpacing:0.3,lineHeight:1.3}}>Studies & Practice <span style={{color:UA.sky}}>(EPSP)</span></div>
+                  <div style={{width:"100%",height:1,background:"rgba(255,255,255,0.15)",margin:"5px 0"}}/>
                   <div style={{fontSize:9,letterSpacing:3,textTransform:"uppercase",color:UA.sky,fontWeight:700,marginBottom:2}}>{conf.location}</div>
-                  <div style={{fontSize:18,fontWeight:900,color:"#fff",lineHeight:1.15,letterSpacing:0.2}}>{conf.name}</div>
-                  {conf.subtitle&&<div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginTop:1}}>{conf.subtitle}</div>}
+                  <div style={{fontSize:24,fontWeight:900,color:"#fff",lineHeight:1.1,letterSpacing:1.5,textTransform:"uppercase",fontFamily:"'proxima-nova-extra-condensed','proxima-nova','Helvetica Neue',Arial,sans-serif"}}>{conf.name}</div>
+                  {conf.subtitle&&<div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginTop:1}}>{conf.subtitle}</div>}
                 </div>
               </div>
               <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
@@ -535,10 +537,12 @@ export default function App(){
             </div>
           </div>
         </div>
-        {/* UA wordmark strip below header */}
-        <div style={{background:UA.midnight,padding:"5px 20px"}}>
-          <div style={{maxWidth:960,margin:"0 auto"}}>
-            <img src="https://cdn.digital.arizona.edu/logos/v1.0.0/ua_wordmark_line_logo_white_rgb.min.svg" alt="The University of Arizona" style={{height:16,opacity:0.55}}/>
+        {/* Bottom strip */}
+        <div style={{background:UA.midnight,padding:"6px 20px"}}>
+          <div style={{maxWidth:960,margin:"0 auto",display:"flex",alignItems:"center",gap:10}}>
+            <img src="https://cdn.digital.arizona.edu/logos/v1.0.0/ua_wordmark_line_logo_white_rgb.min.svg" alt="The University of Arizona" style={{height:14,opacity:0.7}}/>
+            <div style={{width:1,height:14,background:"rgba(255,255,255,0.25)"}}/>
+            <span style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:600,letterSpacing:0.2}}>Department of Educational Policy Studies & Practice (EPSP)</span>
           </div>
         </div>
       </div>
