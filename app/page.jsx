@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 
-const ADMIN_PASSWORD = "aera2026";
+const ADMIN_PASSWORD = "aera2026b";
 
 // ── UA Brand Colors ───────────────────────────────────────────────────────────
 const UA = {
