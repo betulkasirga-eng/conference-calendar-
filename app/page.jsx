@@ -417,41 +417,29 @@ function AttendeeForm({attendee,confDays,onClose,onSave,onDelete}){
 }
 
 // ── Award form ────────────────────────────────────────────────────────────────
-const AWARD_STATUSES = ["Not Applied","Applied","Pending","Awarded","Declined"];
 function AwardForm({award,onClose,onSave,onDelete}){
   const isNew=!award?.id;
-  const [f,setF]=useState(award?{...award}:{title:"",organization:"",amount:"",deadline:"",status:"Not Applied",link:"",notes:""});
+  const [f,setF]=useState(award?{...award}:{recipient:"",title:"",division:"",time:"",location:""});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
-  const handleSave=()=>{if(!f.title.trim())return;onSave({...f,id:award?.id||"A"+Date.now()});onClose();};
-  const handleDel=()=>{if(window.confirm("Delete this award?"+(" "+award.title))){onDelete(award.id);onClose();}};
+  const handleSave=()=>{if(!f.recipient.trim()||!f.title.trim())return;onSave({...f,id:award?.id||"A"+Date.now()});onClose();};
+  const handleDel=()=>{if(window.confirm("Delete?")){onDelete(award.id);onClose();}};
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(12,35,75,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,padding:20,backdropFilter:"blur(4px)"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,maxWidth:500,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.3)",animation:"slideUp 0.22s ease"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,maxWidth:480,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.3)",animation:"slideUp 0.22s ease"}}>
         <div style={{padding:"16px 26px",borderBottom:"1px solid #E8E0D4",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#fff",zIndex:1}}>
           <div style={{fontSize:16,fontWeight:800,color:"#1a1a2e"}}>{isNew?"Add Award":"Edit Award"}</div>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,cursor:"pointer",color:"#9B8E7A"}}>✕</button>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,cursor:"pointer",color:"#9B8E7A"}}>x</button>
         </div>
         <div style={{padding:"18px 26px",display:"flex",flexDirection:"column",gap:12}}>
-          <div><span style={lbl}>Title *</span><input style={inp} value={f.title} onChange={e=>set("title",e.target.value)} placeholder="e.g. AERA Division L Travel Award"/></div>
-          <div><span style={lbl}>Organization</span><input style={inp} value={f.organization} onChange={e=>set("organization",e.target.value)} placeholder="e.g. AERA"/></div>
+          <div><span style={lbl}>Recipient *</span><input style={inp} value={f.recipient} onChange={e=>set("recipient",e.target.value)} placeholder="e.g. Dr. Gary Rhoades"/></div>
+          <div><span style={lbl}>Award Name *</span><input style={inp} value={f.title} onChange={e=>set("title",e.target.value)} placeholder="e.g. Exemplary Research Award"/></div>
+          <div><span style={lbl}>Division / Organization</span><input style={inp} value={f.division} onChange={e=>set("division",e.target.value)} placeholder="e.g. Division J"/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div><span style={lbl}>Amount</span><input style={inp} value={f.amount} onChange={e=>set("amount",e.target.value)} placeholder="e.g. $500"/></div>
-            <div><span style={lbl}>Deadline</span><input style={inp} type="date" value={f.deadline} onChange={e=>set("deadline",e.target.value)}/></div>
+            <div><span style={lbl}>Time</span><input style={inp} value={f.time} onChange={e=>set("time",e.target.value)} placeholder="e.g. 10:00 AM"/></div>
+            <div><span style={lbl}>Location</span><input style={inp} value={f.location} onChange={e=>set("location",e.target.value)} placeholder="e.g. Room 201"/></div>
           </div>
-          <div>
-            <span style={lbl}>Status</span>
-            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:5}}>
-              {AWARD_STATUSES.map(s=>{
-                const sc={Applied:UA.azurite,Pending:UA.mesa,Awarded:UA.leaf,Declined:UA.chili,"Not Applied":"#999"}[s];
-                const sel=f.status===s;
-                return <button key={s} onClick={()=>set("status",s)} style={{padding:"5px 14px",borderRadius:20,border:"1.5px solid",borderColor:sel?sc:"#D0C8BE",background:sel?sc+"18":"transparent",color:sel?sc:"#6B6057",fontSize:12,fontWeight:sel?800:500,cursor:"pointer"}}>{s}</button>;
-              })}
-            </div>
-          </div>
-          <div><span style={lbl}>Link</span><input style={inp} value={f.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."/></div>
-          <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:70}} value={f.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes..."/></div>
           <div style={{display:"flex",gap:8,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D4"}}>
-            {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>🗑️ Delete</button>:<div/>}
+            {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>Delete</button>:<div/>}
             <div style={{display:"flex",gap:8}}>
               <button onClick={onClose} style={{padding:"8px 18px",borderRadius:6,border:"1.5px solid #D0C8BE",background:"none",color:"#6B6057",fontSize:12,cursor:"pointer"}}>Cancel</button>
               <button onClick={handleSave} style={{padding:"8px 18px",borderRadius:6,border:"none",background:UA.blue,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>{isNew?"Add Award":"Save"}</button>
@@ -729,7 +717,7 @@ export default function App(){
             </div>
             {/* Nav tabs */}
             <div style={{display:"flex",gap:0,marginTop:14,borderBottom:`2px solid ${UA.red}`}}>
-              {[["sessions","Sessions"],["calendar","By Day"],["people","People"],["awards","🏆 Awards"]].map(([v,l])=>(
+              {[["sessions","Sessions"],["calendar","By Day"],["people","People"],["awards","Awards"]].map(([v,l])=>(
                 <button key={v} onClick={()=>setView(v)} style={{padding:"8px 18px",border:"none",background:view===v?UA.red:"transparent",color:view===v?"#fff":"rgba(255,255,255,0.5)",fontSize:12,fontWeight:view===v?800:500,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase",transition:"all 0.13s",borderRadius:"4px 4px 0 0"}}>{l}</button>
               ))}
             </div>
@@ -861,35 +849,29 @@ export default function App(){
 
         {view==="awards"&&(
           <>
-            <div style={{marginBottom:16,fontSize:13,color:"#9B8E7A"}}>{awards.length} award{awards.length!==1?"s":""} tracked</div>
+            <div style={{marginBottom:16,fontSize:13,color:"#9B8E7A"}}>{awards.length} award{awards.length!==1?"s":""}</div>
             {awards.length===0?(
               <div style={{textAlign:"center",padding:"60px 0",color:"#9B8E7A"}}>
-                <div style={{fontSize:36,marginBottom:10}}>🏆</div>
-                <div style={{fontSize:14}}>No awards yet. Click + Add Award to start tracking.</div>
+                <div style={{fontSize:14}}>No awards yet.</div>
               </div>
             ):(
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {awards.map(a=>{
-                  const sc={Applied:UA.azurite,Pending:UA.mesa,Awarded:UA.leaf,Declined:UA.chili,"Not Applied":"#999"}[a.status]||UA.azurite;
-                  return(
-                    <div key={a.id} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 1px 6px rgba(12,35,75,0.07)",borderLeft:`4px solid ${sc}`}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-                        <div style={{flex:1}}>
-                          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}>
-                            <span style={{fontSize:10,background:sc+"18",color:sc,padding:"2px 9px",borderRadius:8,fontWeight:800,letterSpacing:0.8}}>{(a.status||"").toUpperCase()}</span>
-                            {a.deadline&&<span style={{fontSize:11,color:"#9B8E7A"}}>📅 {a.deadline}</span>}
-                            {a.amount&&<span style={{fontSize:11,color:UA.leaf,fontWeight:700}}>💰 {a.amount}</span>}
-                          </div>
-                          <div style={{fontSize:15,fontWeight:800,color:"#1a1a2e",marginBottom:3}}>{a.title}</div>
-                          {a.organization&&<div style={{fontSize:12,color:"#6B6057"}}>{a.organization}</div>}
-                          {a.notes&&<div style={{fontSize:12,color:"#9B8E7A",marginTop:6,lineHeight:1.5}}>{a.notes}</div>}
-                          {a.link&&<a href={a.link} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:UA.azurite,fontWeight:700,display:"inline-block",marginTop:6,textDecoration:"none"}}>🔗 View Application</a>}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {awards.map(a=>(
+                  <div key={a.id} style={{background:"#fff",borderRadius:10,padding:"14px 18px",boxShadow:"0 1px 6px rgba(12,35,75,0.07)",borderLeft:"4px solid "+UA.red}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e",marginBottom:2}}>{a.recipient}</div>
+                        <div style={{fontSize:13,color:UA.blue,fontWeight:600,marginBottom:4}}>{a.title}</div>
+                        <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                          {a.division&&<span style={{fontSize:11,color:"#6B6057"}}>{a.division}</span>}
+                          {a.time&&<span style={{fontSize:11,color:"#9B8E7A"}}>{a.time}</span>}
+                          {a.location&&<span style={{fontSize:11,color:"#9B8E7A"}}>{a.location}</span>}
                         </div>
-                        {isAdmin&&<button onClick={()=>setEditAward(a)} style={{background:"none",border:"none",fontSize:14,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
                       </div>
+                      {isAdmin&&<button onClick={()=>setEditAward(a)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </>
