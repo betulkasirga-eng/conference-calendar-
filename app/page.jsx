@@ -508,13 +508,14 @@ function SearchBar({value,onChange,placeholder}){
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App(){
+  const [mounted,setMounted]=useState(false);
   const [ready,setReady]=useState(false);
   const [isAdmin,setIsAdmin]=useState(false);
   useEffect(()=>{
-    if(typeof window!=="undefined"){
-      setIsAdmin(sessionStorage.getItem("isAdmin")==="true");
-    }
+    setMounted(true);
+    setIsAdmin(sessionStorage.getItem("isAdmin")==="true");
   },[]);
+  if(!mounted) return null;
   const handleAdminLogin = () => { setIsAdmin(true); sessionStorage.setItem("isAdmin","true"); };
   const handleAdminLogout = () => { setIsAdmin(false); sessionStorage.removeItem("isAdmin"); };
   const [showLogin,setShowLogin]=useState(false);
@@ -538,17 +539,19 @@ export default function App(){
   useEffect(()=>{
     async function load() {
       try {
-        const [confRows, sessRows, attRows, awardRows] = await Promise.all([
+        const [confRows, sessRows, attRows] = await Promise.all([
           sbGet("conf_settings"),
           sbGet("sessions"),
           sbGet("attendees"),
-          sbGet("awards"),
         ]);
         if (confRows?.length) setConf(confFromDB(confRows[0]));
         if (sessRows?.length) setSessions(sessRows.map(sessionFromDB));
         if (attRows?.length) setAttendees(attRows.map(attendeeFromDB));
-        if (awardRows?.length) setAwards(awardRows.map(awardFromDB));
       } catch(e) { console.error(e); }
+      try {
+        const awardRows = await sbGet("awards");
+        if (awardRows?.length) setAwards(awardRows.map(awardFromDB));
+      } catch(e) { console.warn("Awards table not ready:", e?.message); }
       setReady(true);
     }
     load();
