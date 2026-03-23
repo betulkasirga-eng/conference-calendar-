@@ -564,13 +564,9 @@ function SearchBar({value,onChange,placeholder}){
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App(){
+  const [mounted,setMounted]=useState(false);
   const [ready,setReady]=useState(false);
   const [isAdmin,setIsAdmin]=useState(false);
-  useEffect(()=>{
-    setIsAdmin(sessionStorage.getItem("isAdmin")==="true");
-  },[]);
-  const handleAdminLogin = () => { setIsAdmin(true); sessionStorage.setItem("isAdmin","true"); };
-  const handleAdminLogout = () => { setIsAdmin(false); sessionStorage.removeItem("isAdmin"); };
   const [showLogin,setShowLogin]=useState(false);
   const [conf,setConf]=useState(DEFAULT_CONF);
   const [sessions,setSessions]=useState(DEFAULT_SESSIONS);
@@ -589,7 +585,12 @@ export default function App(){
   const [showAddAward,setShowAddAward]=useState(false);
   const [saved,setSaved]=useState(false);
 
+  const handleAdminLogin = () => { setIsAdmin(true); sessionStorage.setItem("isAdmin","true"); };
+  const handleAdminLogout = () => { setIsAdmin(false); sessionStorage.removeItem("isAdmin"); };
+
   useEffect(()=>{
+    setMounted(true);
+    setIsAdmin(sessionStorage.getItem("isAdmin")==="true");
     async function load() {
       try {
         const [confRows, sessRows, attRows] = await Promise.all([
@@ -635,6 +636,7 @@ export default function App(){
   }),[attendees,q]);
 
   const dayPeople=useMemo(()=>filteredPeople.filter(a=>a.days.includes(selectedDay)),[filteredPeople,selectedDay]);
+  if(!mounted) return null;
 
   const showSaved = () => { setSaved(true); setTimeout(()=>setSaved(false), 1800); };
 
