@@ -83,8 +83,6 @@ const sessionToDB = (s) => ({id:s.id, title:s.title, type:s.type, day:s.day, tim
 const sessionFromDB = (r) => ({...r, endTime:r.end_time, coPresenters:r.co_presenters||"", officialLink:r.official_link||"", presenterIds:r.presenter_ids||[]});
 const attendeeToDB = (a) => ({id:a.id, name:a.name, affiliation:a.affiliation||"", role:a.role||"", email:a.email||"", phone:a.phone||"", website:a.website||"", days:a.days||[], notes:a.notes||""});
 const attendeeFromDB = (r) => ({...r});
-const awardToDB = (a) => ({id:a.id, title:a.title, organization:a.organization||"", amount:a.amount||"", deadline:a.deadline||"", status:a.status||"Applied", link:a.link||"", notes:a.notes||""});
-const awardFromDB = (r) => ({...r});
 
 // ── Default data ───────────────────────────────────────────────────────────────
 const DEFAULT_CONF = { name:"AERA 2026", subtitle:"American Educational Research Association Annual Meeting", location:"Philadelphia, PA", startDate:"2026-04-08", endDate:"2026-04-12" };
@@ -447,53 +445,6 @@ function SettingsModal({conf,onClose,onSave}){
   );
 }
 
-// ── Award form (add/edit) ─────────────────────────────────────────────────────
-const AWARD_STATUSES = ["Not Applied","Applied","Pending","Awarded","Declined"];
-function AwardForm({award,onClose,onSave,onDelete}){
-  const isNew=!award?.id;
-  const [f,setF]=useState(award?{...award}:{title:"",organization:"",amount:"",deadline:"",status:"Not Applied",link:"",notes:""});
-  const set=(k,v)=>setF(p=>({...p,[k]:v}));
-  const handleSave=()=>{if(!f.title)return;onSave({...f,id:award?.id||"A"+Date.now()});onClose();};
-  const handleDel=()=>{if(window.confirm(`Delete "${award.title}"?`)){onDelete(award.id);onClose();}};
-  return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(12,35,75,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,padding:20,backdropFilter:"blur(4px)"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,maxWidth:500,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.3)",animation:"slideUp 0.22s ease"}}>
-        <div style={{padding:"16px 26px",borderBottom:"1px solid #E8E0D4",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#fff",zIndex:1}}>
-          <div style={{fontSize:16,fontWeight:800,color:"#1a1a2e"}}>{isNew?"Add Award":"Edit Award"}</div>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,cursor:"pointer",color:"#9B8E7A"}}>✕</button>
-        </div>
-        <div style={{padding:"18px 26px",display:"flex",flexDirection:"column",gap:12}}>
-          <div><span style={lbl}>Award / Grant Title *</span><input style={inp} value={f.title} onChange={e=>set("title",e.target.value)} placeholder="e.g. AERA Division L Travel Award"/></div>
-          <div><span style={lbl}>Organization</span><input style={inp} value={f.organization} onChange={e=>set("organization",e.target.value)} placeholder="e.g. AERA Division L"/></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div><span style={lbl}>Amount</span><input style={inp} value={f.amount} onChange={e=>set("amount",e.target.value)} placeholder="e.g. $500"/></div>
-            <div><span style={lbl}>Deadline</span><input style={inp} type="date" value={f.deadline} onChange={e=>set("deadline",e.target.value)}/></div>
-          </div>
-          <div>
-            <span style={lbl}>Status</span>
-            <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-              {AWARD_STATUSES.map(s=>{
-                const sc={Applied:UA.azurite,Pending:UA.mesa,Awarded:UA.leaf,Declined:UA.chili,"Not Applied":"#999"}[s];
-                const sel=f.status===s;
-                return <button key={s} onClick={()=>set("status",s)} style={{padding:"5px 14px",borderRadius:20,border:"1.5px solid",borderColor:sel?sc:"#D0C8BE",background:sel?sc+"18":"transparent",color:sel?sc:"#6B6057",fontSize:12,fontWeight:sel?800:500,cursor:"pointer"}}>{s}</button>;
-              })}
-            </div>
-          </div>
-          <div><span style={lbl}>Application Link</span><input style={inp} value={f.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."/></div>
-          <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:70}} value={f.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes..."/></div>
-          <div style={{display:"flex",gap:8,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D4"}}>
-            {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>🗑️ Delete</button>:<div/>}
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={onClose} style={{padding:"8px 18px",borderRadius:6,border:"1.5px solid #D0C8BE",background:"none",color:"#6B6057",fontSize:12,cursor:"pointer"}}>Cancel</button>
-              <button onClick={handleSave} style={{padding:"8px 18px",borderRadius:6,border:"none",background:UA.blue,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>{isNew?"Add Award":"Save Changes"}</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Search bar ────────────────────────────────────────────────────────────────
 function SearchBar({value,onChange,placeholder}){
   return(
@@ -530,24 +481,20 @@ export default function App(){
   const [viewAttendee,setViewAttendee]=useState(null);
   const [editAttendee,setEditAttendee]=useState(null);
   const [showAddAttendee,setShowAddAttendee]=useState(false);
-  const [awards,setAwards]=useState([]);
-  const [editAward,setEditAward]=useState(null);
-  const [showAddAward,setShowAddAward]=useState(false);
+  const [showSettings,setShowSettings]=useState(false);
   const [saved,setSaved]=useState(false);
 
   useEffect(()=>{
     async function load() {
       try {
-        const [confRows, sessRows, attRows, awardRows] = await Promise.all([
+        const [confRows, sessRows, attRows] = await Promise.all([
           sbGet("conf_settings"),
           sbGet("sessions"),
           sbGet("attendees"),
-          sbGet("awards"),
         ]);
         if (confRows?.length) setConf(confFromDB(confRows[0]));
         if (sessRows?.length) setSessions(sessRows.map(sessionFromDB));
         if (attRows?.length) setAttendees(attRows.map(attendeeFromDB));
-        if (awardRows?.length) setAwards(awardRows.map(awardFromDB));
       } catch(e) { console.error(e); }
       setReady(true);
     }
@@ -608,16 +555,7 @@ export default function App(){
     showSaved();
   };
 
-  const saveAward = async (data) => {
-    setAwards(prev => prev.some(a=>a.id===data.id) ? prev.map(a=>a.id===data.id?data:a) : [...prev,data]);
-    await sbUpsert("awards", awardToDB(data));
-    showSaved();
-  };
-  const deleteAward = async (id) => {
-    setAwards(prev => prev.filter(a=>a.id!==id));
-    await sbDelete("awards", id);
-    showSaved();
-  };
+  if(!ready) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:UA.warmGray,fontSize:13,color:UA.blue}}>Loading...</div>;
 
   const SessionCard=({s})=>{
     const tc=TYPE_COLORS[s.type]||UA.azurite;
@@ -719,7 +657,6 @@ export default function App(){
                     <button onClick={()=>setShowSettings(true)} style={{background:"rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.85)",border:"none",padding:"7px 13px",borderRadius:4,fontSize:11,cursor:"pointer",fontWeight:700}}>⚙️ Settings</button>
                     {view==="sessions"&&<button onClick={()=>setShowAddSession(true)} style={{background:UA.red,color:"#fff",border:"none",padding:"7px 14px",borderRadius:4,fontSize:11,fontWeight:800,cursor:"pointer",letterSpacing:0.5}}>+ Add Session</button>}
                     {view==="people"&&<button onClick={()=>setShowAddAttendee(true)} style={{background:UA.red,color:"#fff",border:"none",padding:"7px 14px",borderRadius:4,fontSize:11,fontWeight:800,cursor:"pointer",letterSpacing:0.5}}>+ Add Person</button>}
-                    {view==="awards"&&<button onClick={()=>setShowAddAward(true)} style={{background:UA.red,color:"#fff",border:"none",padding:"7px 14px",borderRadius:4,fontSize:11,fontWeight:800,cursor:"pointer",letterSpacing:0.5}}>+ Add Award</button>}
                     <button onClick={handleAdminLogout} style={{background:"none",color:"rgba(255,255,255,0.35)",border:"1px solid rgba(255,255,255,0.12)",padding:"6px 10px",borderRadius:4,fontSize:11,cursor:"pointer"}}>Log out</button>
                   </>
                 ):(
@@ -729,7 +666,7 @@ export default function App(){
             </div>
             {/* Nav tabs */}
             <div style={{display:"flex",gap:0,marginTop:14,borderBottom:`2px solid ${UA.red}`}}>
-              {[["sessions","Sessions"],["calendar","By Day"],["people","People"],["awards","🏆 Awards"]].map(([v,l])=>(
+              {[["sessions","Sessions"],["calendar","By Day"],["people","People"]].map(([v,l])=>(
                 <button key={v} onClick={()=>setView(v)} style={{padding:"8px 18px",border:"none",background:view===v?UA.red:"transparent",color:view===v?"#fff":"rgba(255,255,255,0.5)",fontSize:12,fontWeight:view===v?800:500,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase",transition:"all 0.13s",borderRadius:"4px 4px 0 0"}}>{l}</button>
               ))}
             </div>
@@ -860,45 +797,6 @@ export default function App(){
         )}
       </div>
 
-        {view==="awards"&&(
-          <>
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:13,color:"#9B8E7A"}}>{awards.length} award{awards.length!==1?"s":""} tracked</div>
-            </div>
-            {awards.length===0?(
-              <div style={{textAlign:"center",padding:"60px 0",color:"#9B8E7A"}}>
-                <div style={{fontSize:36,marginBottom:10}}>🏆</div>
-                <div style={{fontSize:14}}>No awards yet</div>
-              </div>
-            ):(
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {awards.map(a=>{
-                  const statusColor={Applied:UA.azurite,Pending:UA.mesa,Awarded:UA.leaf,Declined:UA.chili,"Not Applied":"#999"}[a.status]||UA.azurite;
-                  return(
-                    <div key={a.id} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 1px 6px rgba(12,35,75,0.07)",borderLeft:`4px solid ${statusColor}`,animation:"fadeIn 0.18s ease"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-                        <div style={{flex:1}}>
-                          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}>
-                            <span style={{fontSize:10,background:statusColor+"18",color:statusColor,padding:"2px 9px",borderRadius:8,fontWeight:800,letterSpacing:0.8}}>{(a.status||"").toUpperCase()}</span>
-                            {a.deadline&&<span style={{fontSize:11,color:"#9B8E7A"}}>📅 Deadline: {a.deadline}</span>}
-                            {a.amount&&<span style={{fontSize:11,color:UA.leaf,fontWeight:700}}>💰 {a.amount}</span>}
-                          </div>
-                          <div style={{fontSize:15,fontWeight:800,color:"#1a1a2e",marginBottom:3}}>{a.title}</div>
-                          {a.organization&&<div style={{fontSize:12,color:"#6B6057"}}>{a.organization}</div>}
-                          {a.notes&&<div style={{fontSize:12,color:"#9B8E7A",marginTop:6,lineHeight:1.5}}>{a.notes}</div>}
-                          {a.link&&<a href={a.link} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:UA.azurite,fontWeight:700,display:"inline-block",marginTop:6,textDecoration:"none"}}>🔗 View Application</a>}
-                        </div>
-                        {isAdmin&&<button onClick={()=>setEditAward(a)} style={{background:"none",border:"none",fontSize:14,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
       {/* ── Footer ── */}
       <div style={{background:UA.midnight,marginTop:40,padding:"18px 20px",textAlign:"center"}}>
         <div style={{maxWidth:960,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -914,7 +812,6 @@ export default function App(){
       {viewAttendee&&<AttendeeView attendee={viewAttendee} sessions={sessions} onClose={()=>setViewAttendee(null)} onEdit={a=>{setViewAttendee(null);setEditAttendee(a);}} isAdmin={isAdmin}/>}
       {isAdmin&&(editSession||showAddSession)&&<SessionForm session={editSession||null} confDays={confDays} attendees={attendees} onClose={()=>{setEditSession(null);setShowAddSession(false);}} onSave={saveSession} onDelete={deleteSession}/>}
       {isAdmin&&(editAttendee||showAddAttendee)&&<AttendeeForm attendee={editAttendee||null} confDays={confDays} onClose={()=>{setEditAttendee(null);setShowAddAttendee(false);}} onSave={saveAttendee} onDelete={deleteAttendee}/>}
-      {isAdmin&&(editAward||showAddAward)&&<AwardForm award={editAward||null} onClose={()=>{setEditAward(null);setShowAddAward(false);}} onSave={saveAward} onDelete={deleteAward}/>}
       {isAdmin&&showSettings&&<SettingsModal conf={conf} onClose={()=>setShowSettings(false)} onSave={saveConf}/>}
     </div>
   );
