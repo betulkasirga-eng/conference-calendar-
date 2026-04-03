@@ -291,7 +291,7 @@ function AttendeeView({attendee,sessions,onClose,onEdit,isAdmin}){
           </div>
         </div>
       </div>
-      {sessDetail&&<SessionDetail session={sessDetail} attendees={DEFAULT_ATTENDEES} onClose={()=>setSessDetail(null)} onEdit={()=>{}} isAdmin={false}/>}
+      {sessDetail&&<SessionDetail session={sessDetail} attendees={attendees} onClose={()=>setSessDetail(null)} onEdit={()=>{}} isAdmin={false}/>}
     </>
   );
 }
@@ -356,6 +356,8 @@ function SessionForm({session,confDays,attendees,onClose,onSave,onDelete}){
               })}
             </div>
           </div>
+          <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:60}} value={f.notes||""} onChange={e=>set("notes",e.target.value)} placeholder="Additional info..."/></div>
+          <div><span style={lbl}>Link</span><input style={inp} value={f.link||""} onChange={e=>set("link",e.target.value)} placeholder="https://..."/></div>
           <div style={{display:"flex",gap:8,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D4"}}>
             {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>🗑️ Delete</button>:<div/>}
             <div style={{display:"flex",gap:8}}>
@@ -403,6 +405,8 @@ function AttendeeForm({attendee,confDays,onClose,onSave,onDelete}){
               ))}            </div>
           </div>
           <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:55}} value={f.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes..."/></div>
+          <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:60}} value={f.notes||""} onChange={e=>set("notes",e.target.value)} placeholder="Additional info..."/></div>
+          <div><span style={lbl}>Link</span><input style={inp} value={f.link||""} onChange={e=>set("link",e.target.value)} placeholder="https://..."/></div>
           <div style={{display:"flex",gap:8,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D4"}}>
             {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>🗑️ Delete</button>:<div/>}
             <div style={{display:"flex",gap:8}}>
@@ -417,9 +421,37 @@ function AttendeeForm({attendee,confDays,onClose,onSave,onDelete}){
 }
 
 // ── Award form ────────────────────────────────────────────────────────────────
+// ── Award detail popup ───────────────────────────────────────────────────────
+function AwardDetail({award,onClose,onEdit,isAdmin}){
+  if(!award) return null;
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(12,35,75,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20,backdropFilter:"blur(4px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,maxWidth:480,width:"100%",maxHeight:"88vh",overflow:"auto",boxShadow:"0 32px 80px rgba(0,0,0,0.3)",animation:"slideUp 0.22s ease"}}>
+        <div style={{background:UA.blue,padding:"20px 24px",borderRadius:"12px 12px 0 0"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:18,fontWeight:800,color:"#fff",lineHeight:1.3,marginBottom:4}}>{award.recipient}</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.8)",fontWeight:600}}>{award.title}</div>
+            </div>
+            <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.7)",fontSize:18,cursor:"pointer",flexShrink:0}}>✕</button>
+          </div>
+        </div>
+        <div style={{padding:"20px 24px",display:"flex",flexDirection:"column",gap:12}}>
+          {award.division&&<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:"#9B8E7A",textTransform:"uppercase",letterSpacing:1,minWidth:70}}>Division</span><span style={{fontSize:13,color:"#1a1a2e"}}>{award.division}</span></div>}
+          {award.time&&<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:"#9B8E7A",textTransform:"uppercase",letterSpacing:1,minWidth:70}}>Time</span><span style={{fontSize:13,color:"#1a1a2e"}}>{award.time}</span></div>}
+          {award.location&&<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:"#9B8E7A",textTransform:"uppercase",letterSpacing:1,minWidth:70}}>Location</span><span style={{fontSize:13,color:"#1a1a2e"}}>{award.location}</span></div>}
+          {award.notes&&<div style={{borderTop:"1px solid #E8E0D4",paddingTop:12}}><div style={{fontSize:11,fontWeight:700,color:"#9B8E7A",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Notes</div><div style={{fontSize:13,color:"#1a1a2e",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{award.notes}</div></div>}
+          {award.link&&<a href={award.link} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:4,padding:"9px 18px",background:UA.blue,color:"#fff",borderRadius:6,fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>View Link</a>}
+          {isAdmin&&<div style={{borderTop:"1px solid #E8E0D4",paddingTop:12}}><button onClick={()=>{onClose();onEdit(award);}} style={{padding:"8px 18px",borderRadius:6,border:"1.5px solid "+UA.blue,background:"none",color:UA.blue,fontSize:12,fontWeight:700,cursor:"pointer"}}>Edit</button></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AwardForm({award,onClose,onSave,onDelete}){
   const isNew=!award?.id;
-  const [f,setF]=useState(award?{...award}:{recipient:"",title:"",division:"",time:"",location:""});
+  const [f,setF]=useState(award?{...award}:{recipient:"",title:"",division:"",time:"",location:"",notes:"",link:""});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
   const handleSave=()=>{if(!f.recipient.trim()||!f.title.trim())return;onSave({...f,id:award?.id||"A"+Date.now()});onClose();};
   const handleDel=()=>{if(window.confirm("Delete?")){onDelete(award.id);onClose();}};
@@ -438,6 +470,8 @@ function AwardForm({award,onClose,onSave,onDelete}){
             <div><span style={lbl}>Time</span><input style={inp} value={f.time} onChange={e=>set("time",e.target.value)} placeholder="e.g. 10:00 AM"/></div>
             <div><span style={lbl}>Location</span><input style={inp} value={f.location} onChange={e=>set("location",e.target.value)} placeholder="e.g. Room 201"/></div>
           </div>
+          <div><span style={lbl}>Notes</span><textarea style={{...inp,resize:"vertical",minHeight:60}} value={f.notes||""} onChange={e=>set("notes",e.target.value)} placeholder="Additional info..."/></div>
+          <div><span style={lbl}>Link</span><input style={inp} value={f.link||""} onChange={e=>set("link",e.target.value)} placeholder="https://..."/></div>
           <div style={{display:"flex",gap:8,justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E8E0D4"}}>
             {!isNew?<button onClick={handleDel} style={{padding:"8px 14px",borderRadius:6,border:"1.5px solid "+UA.red,background:"none",color:UA.red,fontSize:12,cursor:"pointer"}}>Delete</button>:<div/>}
             <div style={{display:"flex",gap:8}}>
@@ -519,6 +553,7 @@ export default function App(){
   const [awards,setAwards]=useState([]);
   const [editAward,setEditAward]=useState(null);
   const [showAddAward,setShowAddAward]=useState(false);
+  const [viewAward,setViewAward]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [saved,setSaved]=useState(false);
 
@@ -857,18 +892,21 @@ export default function App(){
             ):(
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {awards.map(a=>(
-                  <div key={a.id} style={{background:"#fff",borderRadius:10,padding:"14px 18px",boxShadow:"0 1px 6px rgba(12,35,75,0.07)",borderLeft:"4px solid "+UA.red}}>
+                  <div key={a.id} onClick={()=>setViewAward(a)} style={{background:"#fff",borderRadius:10,padding:"14px 18px",boxShadow:"0 1px 6px rgba(12,35,75,0.07)",borderLeft:"4px solid "+UA.red,cursor:"pointer",transition:"all 0.14s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(12,35,75,0.13)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 1px 6px rgba(12,35,75,0.07)";}}
+                  >
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e",marginBottom:2}}>{a.recipient}</div>
-                        <div style={{fontSize:13,color:UA.blue,fontWeight:600,marginBottom:4}}>{a.title}</div>
-                        <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e",marginBottom:2,wordBreak:"break-word"}}>{a.recipient}</div>
+                        <div style={{fontSize:13,color:UA.blue,fontWeight:600,marginBottom:4,wordBreak:"break-word"}}>{a.title}</div>
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                           {a.division&&<span style={{fontSize:11,color:"#6B6057"}}>{a.division}</span>}
                           {a.time&&<span style={{fontSize:11,color:"#9B8E7A"}}>{a.time}</span>}
                           {a.location&&<span style={{fontSize:11,color:"#9B8E7A"}}>{a.location}</span>}
                         </div>
                       </div>
-                      {isAdmin&&<button onClick={()=>setEditAward(a)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
+                      {isAdmin&&<button onClick={e=>{e.stopPropagation();setEditAward(a);}} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",color:"#C0B49A",flexShrink:0}}>✏️</button>}
                     </div>
                   </div>
                 ))}
@@ -893,6 +931,7 @@ export default function App(){
       {viewAttendee&&<AttendeeView attendee={viewAttendee} sessions={sessions} onClose={()=>setViewAttendee(null)} onEdit={a=>{setViewAttendee(null);setEditAttendee(a);}} isAdmin={isAdmin}/>}
       {isAdmin&&(editSession||showAddSession)&&<SessionForm session={editSession||null} confDays={confDays} attendees={attendees} onClose={()=>{setEditSession(null);setShowAddSession(false);}} onSave={saveSession} onDelete={deleteSession}/>}
       {isAdmin&&(editAttendee||showAddAttendee)&&<AttendeeForm attendee={editAttendee||null} confDays={confDays} onClose={()=>{setEditAttendee(null);setShowAddAttendee(false);}} onSave={saveAttendee} onDelete={deleteAttendee}/>}
+      {viewAward&&<AwardDetail award={viewAward} onClose={()=>setViewAward(null)} onEdit={a=>{setViewAward(null);setEditAward(a);}} isAdmin={isAdmin}/>}
       {isAdmin&&(editAward||showAddAward)&&<AwardForm award={editAward||null} onClose={()=>{setEditAward(null);setShowAddAward(false);}} onSave={saveAward} onDelete={deleteAward}/>}
       {isAdmin&&showSettings&&<SettingsModal conf={conf} onClose={()=>setShowSettings(false)} onSave={saveConf}/>}
     </div>
