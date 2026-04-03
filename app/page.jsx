@@ -227,7 +227,7 @@ function SessionDetail({session,attendees,onClose,onEdit,isAdmin}){
 }
 
 // ── Attendee view modal ───────────────────────────────────────────────────────
-function AttendeeView({attendee,sessions,onClose,onEdit,isAdmin}){
+function AttendeeView({attendee,sessions,attendees,onClose,onEdit,isAdmin}){
   const [sessDetail,setSessDetail]=useState(null);
   if(!attendee) return null;
   const c=getColor(attendee.id);
@@ -928,7 +928,7 @@ export default function App(){
       {/* ── Modals ── */}
       {showLogin&&<AdminLogin onClose={()=>setShowLogin(false)} onSuccess={handleAdminLogin}/>}
       {viewSession&&<SessionDetail session={viewSession} attendees={attendees} onClose={()=>setViewSession(null)} onEdit={s=>{setViewSession(null);setEditSession(s);}} isAdmin={isAdmin}/>}
-      {viewAttendee&&<AttendeeView attendee={viewAttendee} sessions={sessions} onClose={()=>setViewAttendee(null)} onEdit={a=>{setViewAttendee(null);setEditAttendee(a);}} isAdmin={isAdmin}/>}
+      {viewAttendee&&<AttendeeView attendee={viewAttendee} sessions={sessions} attendees={attendees} onClose={()=>setViewAttendee(null)} onEdit={a=>{setViewAttendee(null);setEditAttendee(a);}} isAdmin={isAdmin}/>}
       {isAdmin&&(editSession||showAddSession)&&<SessionForm session={editSession||null} confDays={confDays} attendees={attendees} onClose={()=>{setEditSession(null);setShowAddSession(false);}} onSave={saveSession} onDelete={deleteSession}/>}
       {isAdmin&&(editAttendee||showAddAttendee)&&<AttendeeForm attendee={editAttendee||null} confDays={confDays} onClose={()=>{setEditAttendee(null);setShowAddAttendee(false);}} onSave={saveAttendee} onDelete={deleteAttendee}/>}
       {viewAward&&<AwardDetail award={viewAward} onClose={()=>setViewAward(null)} onEdit={a=>{setViewAward(null);setEditAward(a);}} isAdmin={isAdmin}/>}
